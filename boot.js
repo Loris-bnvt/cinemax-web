@@ -77,4 +77,42 @@
   };
   // largeur réelle de l'écran (pour convertir les positions de doigt quand l'app est tournée)
   window.__cxScreenW = rw;
+
+  // Si l'app ne démarre pas : on affiche ce qui bloque (à envoyer en capture), avec un bouton pour recharger.
+  var errors = [];
+  window.addEventListener('error', function (e) {
+    errors.push((e.message || 'erreur') + (e.filename ? ' (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')' : ''));
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason;
+    errors.push('promesse : ' + (r && (r.message || r.toString ? r.toString() : r)));
+  });
+  var shown = false;
+  function showProblem() {
+    if (shown) return;
+    var root = document.getElementById('root');
+    if (root && root.children.length && root.innerText.trim()) return;
+    shown = true;
+    var box = document.createElement('div');
+    box.style.cssText =
+      'position:fixed;left:16px;right:16px;top:30%;z-index:99999;background:#1c1630;color:#fff;border-radius:16px;padding:18px;' +
+      'font:15px/1.4 -apple-system,system-ui,sans-serif;white-space:pre-wrap;word-break:break-word';
+    box.textContent =
+      'Cinémax ne démarre pas.\n\n' +
+      (errors.length ? 'Erreur : ' + errors.slice(0, 3).join('\n') : 'Aucune erreur (chargement très lent ?)') +
+      '\n\nAdresse : ' + location.protocol + '//' + location.host +
+      '\nNavigateur : ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, '');
+    var b = document.createElement('button');
+    b.textContent = 'Recharger';
+    b.style.cssText = 'display:block;margin-top:14px;width:100%;padding:12px;border:0;border-radius:12px;background:#fff;color:#000;font-size:16px;font-weight:600';
+    b.onclick = function () {
+      location.reload();
+    };
+    box.appendChild(b);
+    document.body.appendChild(box);
+  }
+  window.addEventListener('load', function () {
+    setTimeout(showProblem, 6000);
+  });
+  setTimeout(showProblem, 25000);
 })();
