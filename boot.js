@@ -3,6 +3,10 @@
 // l'orientation : l'app est donc tournée d'un quart de tour quand l'iPhone est tenu droit, et l'app
 // « voit » un écran paysage (largeur et hauteur échangées). Si on tourne vraiment l'iPhone, plus besoin.
 (function () {
+  // son des films même quand l'iPhone est en mode silencieux (comme une app vidéo)
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  } catch (e) {}
   var real = window.visualViewport || null;
   var want = false;
   var rot = false;
