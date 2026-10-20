@@ -14,25 +14,9 @@
   function rw() {
     return real ? real.width : document.documentElement.clientWidth;
   }
-  // app de l'écran d'accueil : iOS donne parfois à la page une hauteur trop courte (bande en bas) ;
-  // window.innerHeight donne la vraie hauteur de la fenêtre → on cale la page dessus
-  var standalone = !!navigator.standalone || !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   function rh() {
-    var h = real ? real.height : document.documentElement.clientHeight;
-    if (standalone && window.innerHeight > h && window.innerHeight - h < 140) h = window.innerHeight;
-    return h;
+    return real ? real.height : document.documentElement.clientHeight;
   }
-  function fitPage() {
-    if (!standalone) return;
-    var h = rh() + 'px';
-    document.documentElement.style.height = h;
-    if (document.body) document.body.style.height = h;
-  }
-  window.__cxScreenInfo = function () {
-    return 'fenêtre ' + window.innerWidth + '×' + window.innerHeight + ', page ' + document.documentElement.clientHeight +
-      ', visible ' + (real ? Math.round(real.width) + '×' + Math.round(real.height) : '?') + ', écran ' + screen.width + '×' + screen.height +
-      (standalone ? ', écran d’accueil' : ', Safari');
-  };
   var fake = {
     get width() {
       return rot ? rh() : rw();
@@ -76,7 +60,6 @@
   }
   function update() {
     var before = rot;
-    fitPage();
     apply();
     fire();
     return before !== rot;
@@ -89,8 +72,13 @@
   try {
     Object.defineProperty(window, 'visualViewport', { value: fake, configurable: true });
   } catch (e) {}
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', update);
-  else update();
+  // infos d'écran (affichées en bas des réglages, pour comprendre la bande en bas de l'app de l'écran d'accueil)
+  window.__cxScreenInfo = function () {
+    var sa = !!navigator.standalone;
+    return 'fenêtre ' + window.innerWidth + '×' + window.innerHeight + ', page ' + document.documentElement.clientHeight +
+      ', visible ' + (real ? Math.round(real.width) + '×' + Math.round(real.height) : '?') + ', écran ' + screen.width + '×' + screen.height +
+      (sa ? ', écran d’accueil' : ', Safari');
+  };
   window.__cxLandscape = function (on) {
     want = !!on;
     update();
