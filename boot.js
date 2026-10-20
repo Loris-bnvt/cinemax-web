@@ -7,10 +7,17 @@
   var want = false;
   var rot = false;
   var listeners = [];
+  // app ajoutée à l'écran d'accueil : iOS donne une hauteur trop courte (bande noire en bas) → taille de l'écran
+  var standalone = !!navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  function portrait() {
+    return window.matchMedia ? matchMedia('(orientation: portrait)').matches : window.innerHeight >= window.innerWidth;
+  }
   function rw() {
+    if (standalone && screen.width) return portrait() ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
     return real ? real.width : document.documentElement.clientWidth;
   }
   function rh() {
+    if (standalone && screen.height) return portrait() ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
     return real ? real.height : document.documentElement.clientHeight;
   }
   var fake = {
@@ -52,6 +59,8 @@
       el.style.cssText =
         'position:fixed;left:0;top:0;width:' + rh() + 'px;height:' + rw() + 'px;transform-origin:0 0;' +
         'transform:translateX(' + rw() + 'px) rotate(90deg);overflow:hidden';
+    } else if (standalone) {
+      el.style.cssText = 'position:fixed;left:0;top:0;width:' + rw() + 'px;height:' + rh() + 'px;overflow:hidden';
     } else el.style.cssText = '';
   }
   function update() {
@@ -68,6 +77,10 @@
   try {
     Object.defineProperty(window, 'visualViewport', { value: fake, configurable: true });
   } catch (e) {}
+  // premier calage dès que la page est prête (app de l'écran d'accueil : pleine hauteur)
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', update);
+  else update();
+  window.addEventListener('load', update);
   window.__cxLandscape = function (on) {
     want = !!on;
     update();
