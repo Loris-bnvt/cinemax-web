@@ -99,10 +99,23 @@
     errors.push('promesse : ' + (r && (r.message || r.toString ? r.toString() : r)));
   });
   var shown = false;
-  function showProblem() {
-    if (shown) return;
+  var started = false; // l'app s'est affichée au moins une fois : plus jamais d'alerte (un film en plein écran n'a pas de texte)
+  function hasContent() {
     var root = document.getElementById('root');
-    if (root && root.children.length && root.innerText.trim()) return;
+    return !!(root && root.children.length && root.innerText.trim());
+  }
+  var watch = setInterval(function () {
+    if (hasContent()) {
+      started = true;
+      clearInterval(watch);
+    }
+  }, 500);
+  function showProblem() {
+    if (shown || started) return;
+    if (hasContent()) {
+      started = true;
+      return;
+    }
     shown = true;
     var box = document.createElement('div');
     box.style.cssText =
